@@ -33,7 +33,6 @@ Qwen2.5-7B-Instruct -> Answer
 | `generator/` | Language-model clients, prompt templates, and query fusion |
 | `scripts/` | Data preparation, fine-tuning, indexing, evaluation, and demonstration scripts |
 | `faiss_mineral_45/` | FAISS index and metadata for the 45-record knowledge collection |
-| `training_data/` | Training artifacts, statistics, and fixed text evaluation examples |
 | `eval/vision_qa/` | Image-question examples, annotations, and images |
 | `requirements.txt` | Python dependency requirements |
 
@@ -91,38 +90,9 @@ The retrieval evaluation functions calculate Recall@K, NDCG@K, and MRR@K. The Ju
 
 ## 5. Test Set Examples
 
-### 5.1 Text Examples
+### 5.1 Image-Question Examples
 
-`training_data/eval_100.jsonl` contains **100 fixed text examples**.
-
-| Field | Description |
-| --- | --- |
-| `eval_id` | Example identifier |
-| `query` | Question text |
-| `query_type` | Question category |
-| `positive_id` | Reference document identifier |
-| `positive_name` | Reference mineral name |
-| `positive_text` | Reference document text |
-| `negatives` | Negative document texts |
-
-The question categories are distributed as follows:
-
-| Category | Number |
-| --- | ---: |
-| attribute | 29 |
-| definition | 25 |
-| usage | 18 |
-| origin | 11 |
-| english | 6 |
-| attribute_only | 6 |
-| identification | 5 |
-| **Total** | **100** |
-
-`attribute` asks about a property of a named mineral. `attribute_only` asks for a mineral identity from property conditions without providing its name.
-
-### 5.2 Image-Question Examples
-
-`eval/vision_qa/vision_qa_100.jsonl` contains **100 image-question examples covering 45 class labels**. The corresponding **100 images** are stored under `eval/vision_qa/images/`.
+`eval/vision_qa/vision_qa_examples.jsonl` contains **2 image-question examples for the mineral classes illustrated in the paper: Chalcopyrite and Demantoid**. The corresponding **2 images** are stored under `eval/vision_qa/images/`.
 
 | Field | Description |
 | --- | --- |
@@ -136,4 +106,4 @@ The question categories are distributed as follows:
 | `gold_text` | Reference document text |
 | `class_aliases` | Alternative class names |
 
-The text examples and image-question examples are provided as separate JSONL files, with one record per line.
+The image-question examples are provided as a JSONL file, with one record per line.
