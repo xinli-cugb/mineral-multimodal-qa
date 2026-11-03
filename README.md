@@ -113,5 +113,5 @@ These are used for full-corpus retrieval evaluation, reranking ablation, and end
 
 - Python 3.8+ is required; a GPU is recommended.
 - For GPU execution, setting `OMP_NUM_THREADS` and `MKL_NUM_THREADS` is recommended.
-- For more detailed handoff instructions, see [docs/HANDOFF.md](docs/HANDOFF.md).
+
 
