@@ -29,7 +29,6 @@ Text question / Mineral image
 
 | Path | Description |
 |---|---|
-| `run_pipeline.py` | Entry point (Web / CLI / environment check) |
 | `pipeline/mineral_qa_pipeline.py` | Full pipeline orchestration |
 | `retrieval/` | Embedding, FAISS, BM25, hybrid retrieval, and reranking |
 | `generator/` | LLM clients, prompts, and query fusion |
