@@ -90,20 +90,6 @@ The retrieval evaluation functions calculate Recall@K, NDCG@K, and MRR@K. The Ju
 
 ## 5. Test Set Examples
 
-### 5.1 Image-Question Examples
-
-`eval/vision_qa/vision_qa_examples.jsonl` contains **2 image-question examples for the mineral classes illustrated in the paper: Chalcopyrite and Demantoid**. The corresponding **2 images** are stored under `eval/vision_qa/images/`.
-
-| Field | Description |
-| --- | --- |
-| `eval_id` | Example identifier |
-| `image` | Image path relative to the annotation file |
-| `label_en` | English class label |
-| `label_zh` | Chinese mineral label |
-| `question` | Question text |
-| `gold_id` | Reference document identifier |
-| `gold_name` | Reference mineral name |
-| `gold_text` | Reference document text |
-| `class_aliases` | Alternative class names |
+`eval/vision_qa/vision_qa_examples.jsonl` contains image-question examples. The corresponding images are stored under `eval/vision_qa/images/`.
 
 The image-question examples are provided as a JSONL file, with one record per line.
