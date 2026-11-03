@@ -1,116 +1,139 @@
-# Mineral Image–Text Question Answering System
+# Mineral Multimodal Question Answering System
 
-A retrieval-augmented generation (RAG) system for mineral specimen question answering. It supports text questions and “image + question” inputs, integrating visual recognition, hybrid retrieval, reranking, and local large language model generation into a complete pipeline.
+A mineral question answering system that combines computer vision and retrieval-augmented generation (RAG). The project includes visual recognition, query fusion, hybrid retrieval, reranking, and local large language model generation.
 
-## Architecture
+The full pipeline follows this workflow:
 
+```text
+Mineral image + Question
+          |
+          v
+Swin Transformer -> Top-3 visual candidates
+          |
+          v
+Query fusion
+          |
+          v
+Qwen3-Embedding + BM25 -> RRF fusion
+          |
+          v
+Qwen3-Reranker -> Top-3 evidence documents
+          |
+          v
+Qwen2.5-7B-Instruct -> Answer
 ```
-Text question / Mineral image
-   ├─ Image → Swin Transformer → Top-3 visual anchors
-   ├─ Query fusion (optional LLM-based rewriting)
-   ├─ Qwen3-Embedding → FAISS dense retrieval
-   ├─ jieba BM25 sparse retrieval
-   ├─ RRF fusion
-   ├─ Qwen3-Reranker reranking → Top-3
-   └─ Qwen2.5-7B-Instruct answer generation
-```
 
-## Workflow
-
-1. The user enters a text question or uploads a mineral image.
-2. Swin Transformer classifies the image and returns the Top-3 candidate minerals.
-3. For image–text inputs, the query fusion module rewrites the visual candidates and question into a retrieval query.
-4. The embedding and BM25 channels retrieve documents in parallel, and RRF merges their results into a candidate list.
-5. The reranker rescores the candidates and retains the Top-3 documents.
-6. The documents and question are combined into a prompt, and the local Qwen2.5-7B model generates an answer.
-7. The Streamlit page displays the answer, cited documents, and visual recognition results.
-
-## Directory Structure
+## 1. Repository Structure
 
 | Path | Description |
-|---|---|
+| --- | --- |
 | `pipeline/mineral_qa_pipeline.py` | Full pipeline orchestration |
-| `retrieval/` | Embedding, FAISS, BM25, hybrid retrieval, and reranking |
-| `generator/` | LLM clients, prompts, and query fusion |
-| `vision/` | Swin inference and training code |
-| `scripts/` | Data construction, model fine-tuning, indexing, and evaluation scripts |
-| `training_data/` | Corpus and training sets |
-| `faiss_mineral_6408/` | FAISS index |
+| `vision/` | Swin Transformer inference and training |
+| `retrieval/` | Embedding, FAISS, Milvus, BM25, hybrid retrieval, and reranking |
+| `generator/` | Language-model clients, prompt templates, and query fusion |
+| `scripts/` | Data preparation, fine-tuning, indexing, evaluation, and demonstration scripts |
+| `faiss_mineral_45/` | FAISS index and metadata for the 45-record knowledge collection |
+| `training_data/` | Training artifacts, statistics, and fixed text evaluation examples |
+| `eval/vision_qa/` | Image-question examples, annotations, and images |
+| `requirements.txt` | Python dependency requirements |
 
-## Quick Start
+## 2. Installation
+
+Install the project dependencies in a Python environment:
 
 ```bash
 pip install -r requirements.txt
+```
 
+For GPU execution, the original project uses the following thread settings:
+
+```bash
 export OMP_NUM_THREADS=4
 export MKL_NUM_THREADS=4
-
-# Check the environment
-python run_pipeline.py --mode check
-
-# Launch the Web interface
-streamlit run run_pipeline.py
 ```
 
-Model paths are configured in `pipeline/mineral_qa_pipeline.py`, including the generation model, embedding model, reranker, Swin weights, and label mapping. If fine-tuned weights are unavailable, the code falls back to the base models under `model/`.
+Model paths, data paths, and runtime parameters are configured in the corresponding scripts.
 
-## Data Construction
+## 3. Data Preparation and Model Training
 
-```bash
-python scripts/build_retrieval_dataset.py \
-  --input text_data/all_v1.json \
-  --output_dir training_data \
-  --num_negatives 7 --hard_ratio 0.7 \
-  --val_ratio 0.1 --test_ratio 0.1 --seed 42
-```
+| Script | Purpose |
+| --- | --- |
+| `scripts/refactor_mineral_data.py` | Rewrite structured mineral records through a language-model API |
+| `scripts/refactor_mineral_data_local.py` | Rewrite mineral records using a local language model |
+| `scripts/prepare_training_data.py` | Prepare embedding and reranker training examples |
+| `scripts/generate_hard_negatives.py` | Select negative examples using embedding similarity |
+| `scripts/build_retrieval_dataset.py` | Build the corpus, queries, negative examples, and grouped text splits |
+| `scripts/finetune_qwen3_embedding.py` | Fine-tune the embedding model |
+| `scripts/finetune_qwen3_reranker.py` | Fine-tune the reranker |
+| `vision/swin_trainer.py` | Train and validate the mineral image classifier |
+| `scripts/ingest_45_faiss.py` | Build a FAISS index for the 45-record collection |
+| `scripts/ingest_45.py` | Import the 45-record collection into Milvus |
+| `scripts/ingest_mineral_data.py` | Import structured mineral data into Milvus |
 
-This generates the corpus, embedding training sets, and reranker training pairs, with grouped splitting by mineral name.
+The text dataset builder groups records by normalized mineral name when creating training, validation, and test splits.
 
-## Model Training
+## 4. Question Answering and Evaluation
 
-```bash
-# Embedding fine-tuning
-python scripts/finetune_qwen3_embedding.py \
-  --model_path model/Qwen3-Embedding-0.6B \
-  --train_data training_data/embedding/train.json \
-  --val_data training_data/embedding/val.json \
-  --test_data training_data/embedding/test.json \
-  --output_dir outputs/embedding
+`pipeline/mineral_qa_pipeline.py` connects visual recognition, query fusion, retrieval, reranking, and answer generation.
 
-# Reranker fine-tuning
-python scripts/finetune_qwen3_reranker.py \
-  --model_path model/Qwen3-Reranker-0.6B \
-  --train_data training_data/reranker/train_pairs.jsonl \
-  --val_data training_data/reranker/val_pairs.jsonl \
-  --test_data training_data/reranker/test_pairs.jsonl \
-  --output_dir outputs/reranker
-```
+`scripts/mineral_qa_system.py` provides a simplified Streamlit demonstration that identifies a mineral, looks up its information by name, and generates an answer.
 
-## Evaluation
+| Script | Purpose |
+| --- | --- |
+| `scripts/eval_retrieval.py` | Evaluate dense, BM25, and hybrid retrieval |
+| `scripts/eval_rerank.py` | Compare retrieval rankings before and after reranking |
+| `scripts/eval_judge.py` | Evaluate text question answering using an LLM judge |
+| `scripts/eval_common.py` | Shared data-loading and metric functions |
+| `scripts/test_refactor.py` | Test the output format of data rewriting |
+| `scripts/test_api_response.py` | Inspect language-model API responses |
 
-```bash
-python scripts/eval_retrieval.py --split test
-python scripts/eval_rerank.py --split test
-python scripts/eval_judge.py --eval-set training_data/eval_100.jsonl
-```
+The retrieval evaluation functions calculate Recall@K, NDCG@K, and MRR@K. The Judge script supports rubric scoring and binary judgments. Its rubric covers accuracy, completeness, faithfulness, and non-hallucination.
 
-The image–text end-to-end evaluation set (100 test images + class labels + questions + gold documents) is located in `eval/vision_qa/`. Run:
+## 5. Test Set Examples
 
-```bash
-python scripts/eval_vision_qa.py --dataset eval/vision_qa/vision_qa_100.jsonl
-```
+### 5.1 Text Examples
 
-The fixed 100-example evaluation set is saved in `training_data/eval_100.jsonl`, randomly sampled from the test set using seed=42. It can be reproduced with:
+`training_data/eval_100.jsonl` contains **100 fixed text examples**.
 
-```bash
-python scripts/sample_eval_set.py --num 100 --seed 42
-```
+| Field | Description |
+| --- | --- |
+| `eval_id` | Example identifier |
+| `query` | Question text |
+| `query_type` | Question category |
+| `positive_id` | Reference document identifier |
+| `positive_name` | Reference mineral name |
+| `positive_text` | Reference document text |
+| `negatives` | Negative document texts |
 
-These are used for full-corpus retrieval evaluation, reranking ablation, and end-to-end LLM-as-a-Judge evaluation, respectively.
+The question categories are distributed as follows:
 
-## Notes
+| Category | Number |
+| --- | ---: |
+| attribute | 29 |
+| definition | 25 |
+| usage | 18 |
+| origin | 11 |
+| english | 6 |
+| attribute_only | 6 |
+| identification | 5 |
+| **Total** | **100** |
 
-- Python 3.8+ is required; a GPU is recommended.
-- For GPU execution, setting `OMP_NUM_THREADS` and `MKL_NUM_THREADS` is recommended.
+`attribute` asks about a property of a named mineral. `attribute_only` asks for a mineral identity from property conditions without providing its name.
 
+### 5.2 Image-Question Examples
 
+`eval/vision_qa/vision_qa_100.jsonl` contains **100 image-question examples covering 45 class labels**. The corresponding **100 images** are stored under `eval/vision_qa/images/`.
+
+| Field | Description |
+| --- | --- |
+| `eval_id` | Example identifier |
+| `image` | Image path relative to the annotation file |
+| `label_en` | English class label |
+| `label_zh` | Chinese mineral label |
+| `question` | Question text |
+| `gold_id` | Reference document identifier |
+| `gold_name` | Reference mineral name |
+| `gold_text` | Reference document text |
+| `class_aliases` | Alternative class names |
+
+The text examples and image-question examples are provided as separate JSONL files, with one record per line.
