@@ -73,7 +73,7 @@ pip install "pymilvus>=2.4.0"
 
 ## 3. Dataset Preparation
 
-The complete training datasets are not included in this repository. Prepare the image data and structured mineral records locally, and pass their paths to the corresponding scripts.
+Prepare the image data and structured mineral records locally, and pass their paths to the corresponding scripts.
 
 ### 3.1 Visual Classification Data
 
