@@ -123,7 +123,7 @@ The script generates query-positive-document samples, selects negative documents
 
 ## 4. How to Run
 
-The original experiment used local model checkpoints and datasets. Before running a script, replace its default paths with the locations of your Swin Transformer checkpoint, Qwen3-Embedding model, Qwen3-Reranker model, Qwen2.5-7B-Instruct model, and mineral data.
+Before running a script, replace its default paths with the locations of your Swin Transformer checkpoint, Qwen3-Embedding model, Qwen3-Reranker model, Qwen2.5-7B-Instruct model, and mineral data.
 
 ### 4.1 Run the Interactive Demo
 
